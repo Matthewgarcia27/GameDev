@@ -5,6 +5,16 @@ const retryBtn = document.getElementById('retryBtn');
 const jumpscareOverlay = document.getElementById('jumpscareOverlay');
 const jumpscareImage = document.getElementById('jumpscareImage');
 
+
+const CORRECT_HASH_STAGE3 = '0bb09d80600eec3eb9d7793a6f859bedde2a2d83899b70bd78e961ed674b32f4';
+
+async function hashAnswer(answer) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(answer.toLowerCase());
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 if (jumpscareImage) {
     jumpscareImage.style.cursor = 'pointer';
     jumpscareImage.addEventListener('click', () => {
@@ -26,13 +36,16 @@ if (retryBtn) {
     });
 }
 
-answerBtn.addEventListener('click', () => {
-    const answer = answerInput.value.trim().toLowerCase();
-    if (answer === 'SHADOW') {
-        resultMessage.textContent = 'Correct! The name is Totoy Bibo.';
+answerBtn.addEventListener('click', async () => {
+    const answer = answerInput.value.trim();
+    const answerHash = await hashAnswer(answer);
+    
+    // Always hide overlay initially
+    if (jumpscareOverlay) jumpscareOverlay.hidden = true;
+    
+    if (answerHash === CORRECT_HASH_STAGE3) {
+        resultMessage.textContent = 'Correct!';
         resultMessage.style.display = 'block';
-        if (jumpscareOverlay) jumpscareOverlay.hidden = true;
-        window.location.href = 'stage2.html';
     } else {
         resultMessage.textContent = 'Incorrect. Try again.';
         resultMessage.style.display = 'block';
